@@ -41,24 +41,27 @@ def root(token: str):
         # 使用find找到torrent节点，再找到pubDate
         pub_date_element = item.find('.//ns:torrent/ns:pubDate', namespaces)
         if pub_date_element is not None:
-            # 原始pubDate字符串
-            pub_date_str = pub_date_element.text
-            # 去掉微秒部分，转换格式
-            if '.' in pub_date_str:
-                pub_date_str = pub_date_str.split('.')[0]  # 去掉微秒部分
-            # 解析原始日期字符串
-            pub_date = datetime.fromisoformat(pub_date_str)
-            # 将日期格式化为目标格式
-            formatted_pub_date = pub_date.strftime('%a, %d %b %Y %H:%M:%S +0800')
-            # 更新pubDate元素的文本
-            # pub_date_element.text = formatted_pub_date  # 也没必要
+            try:  # 为了防止mikan忽然改格式导致InternalError
+                # 原始pubDate字符串
+                pub_date_str = pub_date_element.text
+                # 去掉微秒部分，转换格式
+                if '.' in pub_date_str:
+                    pub_date_str = pub_date_str.split('.')[0]  # 去掉微秒部分
+                # 解析原始日期字符串
+                pub_date = datetime.fromisoformat(pub_date_str)
+                # 将日期格式化为目标格式
+                formatted_pub_date = pub_date.strftime('%a, %d %b %Y %H:%M:%S +0800')
+                # 更新pubDate元素的文本
+                # pub_date_element.text = formatted_pub_date  # 也没必要
 
-            # 将pubDate元素移动到item下
-            # 创建新的pubDate节点
-            new_pub_date_element = etree.Element('pubDate')
-            new_pub_date_element.text = formatted_pub_date
-            # 将新的pubDate添加到item的最后
-            item.append(new_pub_date_element)
+                # 将pubDate元素移动到item下
+                # 创建新的pubDate节点
+                new_pub_date_element = etree.Element('pubDate')
+                new_pub_date_element.text = formatted_pub_date
+                # 将新的pubDate添加到item的最后
+                item.append(new_pub_date_element)
+            except:
+                continue
 
     content = etree.tostring(doc)
     return Response(content, media_type="application/xml")
